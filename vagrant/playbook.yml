@@ -11,6 +11,17 @@
      - fence-agents-all
      - resource-agents
   tasks:
+   - name: Set environment vars
+     blockinfile:
+      path: /etc/profile.d/00_env.sh
+      owner: root
+      group: root
+      create: yes
+      mode: 0755
+      block: |
+       export TERM=linux
+     become: yes
+     become_method: sudo     
    - name: Install Packages
      yum:
       name: "{{ packages }}"
