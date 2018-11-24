@@ -23,6 +23,14 @@
        export TERM=linux
      become: yes
      become_method: sudo     
+   - name: fix hosts file
+     lineinfile:
+      path: /etc/hosts
+      regexp: '^127.0.0.1.*centosbox.*'
+      create: no
+      state: absent
+     become: yes
+     become_method: sudo
    - name: Install Packages
      yum:
       name: "{{ packages }}"
