@@ -1,0 +1,19 @@
+---
+- hosts: all
+  tasks:
+   - name: Install Packages
+     yum:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+     become: yes
+     become_method: sudo
+     with_items:
+      - jq
+      - openssl
+      - pacemaker
+      - corosync
+      - haveged
+      - pcs
+      - fence-agents-all
+      - resource-agents
