@@ -1,31 +1,40 @@
 ---
 - hosts: all
+  vars:
+    packages:
+     - jq
+     - openssl
+     - pacemaker
+     - corosync
+     - haveged
+     - pcs
+     - fence-agents-all
+     - resource-agents
   tasks:
    - name: Install Packages
      yum:
-      name: "{{ item }}"
+      name: "{{ packages }}"
       state: present
       update_cache: yes
      become: yes
      become_method: sudo
-     with_items:
-      - jq
-      - openssl
-      - pacemaker
-      - corosync
-      - haveged
-      - pcs
-      - fence-agents-all
-      - resource-agents
    - name: Enable haveged
      systemd:
       name: haveged
       enabled: yes
+      state: started
      become: yes
      become_method: sudo
    - name: Enable pcsd
      systemd:
       name: pcsd
       enabled: yes
+      state: started
+     become: yes
+     become_method: sudo
+   - name: Set password for hacluster
+     user:
+      name: hacluster
+      password: "$6$wOXw4xjc3RLD$8waRFfTP3Pgzxi4WDggCBybW6YAzCoKS794NE65Qp7GN4HxXugMi6vgsQYTAdSeYhfdz1bVT4VIRdQFVg3Hly/"
      become: yes
      become_method: sudo
