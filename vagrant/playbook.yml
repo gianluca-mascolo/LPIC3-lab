@@ -78,4 +78,29 @@
       update_cache: yes
      become: yes
      become_method: sudo
-
+   - name: remove old sysconfig for kernel
+     file:
+      path: /etc/sysconfig/kernel
+      state: absent
+     become: yes
+     become_method: sudo
+   - name: update sysconfig for kernel-lt
+     blockinfile:
+      path: /etc/sysconfig/kernel
+      owner: root
+      group: root
+      create: yes
+      mode: 0644
+      block: |
+       UPDATEDEFAULT=yes
+       DEFAULTKERNEL=kernel-lt
+     become: yes
+     become_method: sudo
+   - name: Install kernel-lt
+     yum:
+      name: kernel-lt
+      state: present
+      update_cache: yes
+      enablerepo: elrepo-kernel
+     become: yes
+     become_method: sudo
