@@ -61,3 +61,35 @@ disable stonith
 ```
 [root@centosbox01 ~]# pcs property set stonith-enabled=false
 ```
+
+create drbd
+
+copy drbd0.res from configs to /etc/drbd.d
+
+verify res is valid
+```
+[root@centosbox01 ~]# drbdadm dump all
+```
+if valid will dump the conf. if not print errors
+
+create device on both nodes
+```
+[root@centosbox01 ~]# drbdadm -- --ignore-sanity-checks create-md drbd0
+```
+
+start on both nodes
+```
+[root@centosbox01 ~]# drbdadm up drbd0
+```
+
+configure drbd in cluster
+```
+pcs resource create drbd0-r0 ocf:linbit:drbd drbd_resource=drbd0 op monitor interval=15 role=Master op monitor interval=30 role=Slave
+pcs resource master ms-drbd0-r0 drbd0-r0 master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+```
+
+verify setup
+
+```
+[root@centosbox01 ~]# drbd-overview 
+```
