@@ -6,6 +6,13 @@ this is a lab built with vagrant to experiment with centos7 cluster (pacemaker/c
 #commands examples
 
 ```
+[gmascolo@gmascolo-pc vagrant]$ vagrant plugin list
+vagrant-disksize (0.1.3, global)
+vagrant-hostmanager (1.8.9, global)
+[gmascolo@gmascolo-pc vagrant]$ 
+```
+
+```
 [root@centosbox01 ~]# pcs cluster auth centosbox01.local.lab centosbox02.local.lab -u hacluster -p labcluster
 centosbox02.local.lab: Authorized
 centosbox01.local.lab: Authorized
