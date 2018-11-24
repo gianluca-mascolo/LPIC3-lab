@@ -11,12 +11,23 @@ vagrant-disksize (0.1.3, global)
 vagrant-hostmanager (1.8.9, global)
 [gmascolo@gmascolo-pc vagrant]$ 
 ```
+resync playbook
+```
+$ vagrant rsync
+```
 
+replay ansible on a node
+```
+[vagrant@centosbox01 ~]$ ansible-playbook -c local -i 'localhost,' /vagrant/playbook.yml 
+```
+
+auth cluster
 ```
 [root@centosbox01 ~]# pcs cluster auth centosbox01.local.lab centosbox02.local.lab -u hacluster -p labcluster
 centosbox02.local.lab: Authorized
 centosbox01.local.lab: Authorized
 ```
+start cluster
 
 ```
 [root@centosbox01 ~]# pcs cluster setup --start --name labcluster centosbox01.local.lab centosbox02.local.lab 
