@@ -17,3 +17,15 @@
       - pcs
       - fence-agents-all
       - resource-agents
+   - name: Enable haveged
+     systemd:
+      name: haveged
+      enabled: yes
+     become: yes
+     become_method: sudo
+   - name: Enable pcsd
+     systemd:
+      name: pcsd
+      enabled: yes
+     become: yes
+     become_method: sudo
