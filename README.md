@@ -82,14 +82,26 @@ start on both nodes
 [root@centosbox01 ~]# drbdadm up drbd0
 ```
 
+verify setup
+
+```
+[root@centosbox01 ~]# drbd-overview 
+```
+
+format the filesystem
+```
+[root@centosbox01 ~]# mkfs.xfs /dev/drbd0 
+```
 configure drbd in cluster
 ```
 pcs resource create drbd0-r0 ocf:linbit:drbd drbd_resource=drbd0 op monitor interval=15 role=Master op monitor interval=30 role=Slave
 pcs resource master ms-drbd0-r0 drbd0-r0 master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
 ```
 
-verify setup
+manage drbd filesystem
+```
+pcs resource create  drbd-r0-fs ocf:heartbeat:Filesystem device="/dev/drbd0" directory="/shared" fstype=xfs op start timeout=60 op monitor timeout=40 interval=20
+pcs constraint order promote ms-drbd0-r0 then start drbd-r0-fs
 
 ```
-[root@centosbox01 ~]# drbd-overview 
-```
+
