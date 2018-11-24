@@ -104,3 +104,14 @@
       enablerepo: elrepo-kernel
      become: yes
      become_method: sudo
+   - name: load drbd module
+     blockinfile:
+      path: /etc/modules-load.d/drbd.conf
+      owner: root
+      group: root
+      create: yes
+      mode: 0644
+      block: |
+       drbd
+     become: yes
+     become_method: sudo
