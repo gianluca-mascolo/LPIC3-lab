@@ -13,6 +13,7 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.provision "file", source: "./ansible.repo", destination: "/tmp/ansible.repo"
+  config.vm.provision "shell", path: "./install_ansible.sh"
 
   config.vm.define "cluster1" do |cluster1|
     cluster1.vm.box = "centos/7"
