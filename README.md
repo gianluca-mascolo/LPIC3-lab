@@ -56,3 +56,8 @@ centosbox02.local.lab: Success
 centosbox01.local.lab: Success
 [root@centosbox01 ~]# 
 ```
+
+disable stonith
+```
+[root@centosbox01 ~]# pcs property set stonith-enabled=false
+```
