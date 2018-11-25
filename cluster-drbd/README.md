@@ -1,5 +1,6 @@
 # cluster and drbd commands
 
+## note for me: disable selinux or learn to configure it!!!
 auth cluster
 ```
 [root@centosbox01 ~]# pcs cluster auth centosbox01.local.lab centosbox02.local.lab -u hacluster -p labcluster
