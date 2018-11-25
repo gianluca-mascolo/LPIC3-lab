@@ -60,7 +60,23 @@ start on both nodes
 ```
 [root@centosbox01 ~]# drbdadm up drbd0
 ```
+promote only ONE node to be primary
+```
+[root@centosbox01 drbd.d]# drbdadm primary --force drbd0
+[root@centosbox01 drbd.d]# drbd-overview 
+NOTE: drbd-overview will be deprecated soon.
+Please consider using drbdtop.
 
+ 0:drbd0/0  SyncSource Primary/Secondary UpToDate/Inconsistent 
+	[===>................] sync'ed: 23.1% (43600/51160)K           
+[root@centosbox01 drbd.d]# drbd-overview 
+NOTE: drbd-overview will be deprecated soon.
+Please consider using drbdtop.
+
+ 0:drbd0/0  SyncSource Primary/Secondary UpToDate/Inconsistent 
+	[=====>..............] sync'ed: 30.8% (39164/51160)K           
+[root@centosbox01 drbd.d]# 
+```
 verify setup
 
 ```
