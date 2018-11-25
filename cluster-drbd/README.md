@@ -101,3 +101,18 @@ pcs constraint order promote ms-drbd0-r0 then start drbd-r0-fs
 
 ```
 
+how to enqueue/push multiple pcs commands at a time (it writes a local cib file)
+```
+[root@centosbox01 ~]# pcs cluster cib drbd_cfg
+[root@centosbox01 ~]# ls
+anaconda-ks.cfg  drbd_cfg  original-ks.cfg
+[root@centosbox01 ~]# pcs -f drbd_cfg resource create drbd0-r0 ocf:linbit:drbd drbd_resource=drbd0 op monitor interval=15 role=Master op monitor interval=30 role=Slave
+[root@centosbox01 ~]# pcs resource master ms-drbd0-r0 drbd0-r0 master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+Error: Unable to find resource or group with id drbd0-r0
+[root@centosbox01 ~]# pcs -f drbd_cfg resource master ms-drbd0-r0 drbd0-r0 master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+[root@centosbox01 ~]# pcs -f drbd_cfg resource show
+ Master/Slave Set: ms-drbd0-r0 [drbd0-r0]
+     Stopped: [ centosbox01.local.lab centosbox02.local.lab ]
+[root@centosbox01 ~]# pcs cluster cib-push drbd_cfg 
+CIB updated
+```
