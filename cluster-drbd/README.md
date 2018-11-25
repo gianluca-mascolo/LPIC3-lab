@@ -42,6 +42,10 @@ disable stonith
 [root@centosbox01 ~]# pcs property set stonith-enabled=false
 ```
 
+## configure drbd
+
+### note: drbd on centos is part of elrepo
+
 create drbd
 
 copy drbd0.res from configs to /etc/drbd.d
@@ -116,4 +120,33 @@ Error: Unable to find resource or group with id drbd0-r0
      Stopped: [ centosbox01.local.lab centosbox02.local.lab ]
 [root@centosbox01 ~]# pcs cluster cib-push drbd_cfg 
 CIB updated
+```
+
+## configure an high available iscsi target backed by drbd
+
+first configure drbd
+```
+pcs resource create drbd0-r0 ocf:linbit:drbd drbd_resource=drbd0 op monitor interval=15 role=Master op monitor interval=30 role=Slave
+pcs resource master ms-drbd0-r0 drbd0-r0 master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 notify=true
+```
+
+install target utils on both nodes
+```
+yum install scsi-target-utils targetcli
+```
+
+assign a vip for the target and create a target and a lun. use `lio-t` for implementation. `lio-t` make use of the `targetcli` backend command. if you specify only `lio` (the default)
+you will get an error about a missing command `tcm_node`. this is from the old lio-utils package not supported anymore.
+
+```
+pcs resource create iscsi-tgt-ip ocf:heartbeat:IPaddr2 ip=192.168.50.100 cidr_netmask=32 op monitor interval=10 timeout=20
+pcs resource create iscsi-tgt ocf:heartbeat:iSCSITarget implementation=lio-t iqn=iqn.2018-11.lab.cluster:clustertgt
+pcs resource create iscsilun0 ocf:heartbeat:iSCSILogicalUnit implementation=lio-t target_iqn="iqn.2018-11.lab.cluster:clustertgt" path="/dev/drbd0" lun=0 allowed_initiators="iqn.2018-11.lab.cluster:centosbox01 iqn.2018-11.lab.cluster:centosbox02"
+```
+group all together and make sure that iscsi target is started after drbd
+
+```
+pcs resource group add iscsigroup iscsi-tgt-ip iscsi-tgt iscsilun0
+pcs constraint order start ms-drbd0-r0 then start iscsigroup
+pcs constraint colocation add iscsigroup ms-drbd0-r0 INFINITY with-rsc-role=Master
 ```
