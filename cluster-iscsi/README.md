@@ -314,3 +314,25 @@ Login to [iface: default, target: iqn.2018-12.lab.local:clustertgt, portal: 192.
 [root@centosbox01 ~]# 
 ```
 **IMPORTANT**:when you shutdown you vagrant machines please be sure to first shutdown nodes then shutdown iscsisan
+
+## setup cluster lvm
+
+configuration is `/etc/lvm/lvm.conf`
+
+lvm works with physical volumes, volume groups and logical volumes.
+the problem is now this: when you mount a shared volume, like an iscsi lun,
+you have the same device (let's say /dev/sdb) in all of your servers.
+When you create a LVM vol on top of that physical volume, the volume group
+(that stores the lvm metadata) risk to be corrupted if two nodes try to write to the same
+block. For this reason we need a special version of lvm used for clusters,
+and some locking mechanism. We shoud also disable lvm metadata management on the
+single node and let the cluster manage it.  
+  
+distributed lock manager, or dlm, manage locks.  
+clvmd is the clustered lvm daemon.  
+  
+in redhat centos you can use HALVM or cLVM models. with HALVM you make an lvm vol writable
+only by one node at a time (that is, you use an active/passive model). If one node fail
+the other take on and mount the vol as read/write.  
+cLVM on the other side let you write simultaneosly from both nodes but for that you will need
+a clustered file system like GFS or OCFS2
