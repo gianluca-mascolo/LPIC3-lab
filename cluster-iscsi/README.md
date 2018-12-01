@@ -122,4 +122,22 @@ Daemon Status:
   pcsd: active/enabled
 [root@centosbox01 ~]#
 ```
-
+## Test stonith
+```
+[root@centosbox01 ~]# echo c > /proc/sysrq-trigger
+```
+centosbox01 will freeze (crash) and centosbox02 will use VBoxManage to force shutdown
+```
+[root@centosbox02 ~]# egrep "(pengine|stonith-ng|crmd|fence)" /var/log/messages  | tail
+Dec  1 15:45:06 centosbox02 stonith-ng[1676]:  notice: fence_centosbox01 can fence (reboot) centosbox01.local.lab: static-list
+Dec  1 15:45:32 centosbox02 fence_vbox: Timed out waiting to power ON
+Dec  1 15:45:32 centosbox02 stonith-ng[1676]: warning: fence_vbox[2234] stderr: [ 2018-12-01 15:45:32,168 ERROR: Timed out waiting to power ON ]
+Dec  1 15:45:32 centosbox02 stonith-ng[1676]: warning: fence_vbox[2234] stderr: [  ]
+Dec  1 15:45:32 centosbox02 stonith-ng[1676]:  notice: Operation 'reboot' [2234] (call 2 from crmd.1680) for host 'centosbox01.local.lab' with device 'fence_centosbox01' returned: 0 (OK)
+Dec  1 15:45:32 centosbox02 stonith-ng[1676]:  notice: Operation reboot of centosbox01.local.lab by centosbox02.local.lab for crmd.1680@centosbox02.local.lab.939413ad: OK
+Dec  1 15:45:32 centosbox02 crmd[1680]:  notice: Stonith operation 2/1:10:0:aaeff28f-d52c-460c-b56d-164a3706e37d: OK (0)
+Dec  1 15:45:32 centosbox02 crmd[1680]:  notice: Peer centosbox01.local.lab was terminated (reboot) by centosbox02.local.lab on behalf of crmd.1680: OK
+Dec  1 15:45:32 centosbox02 crmd[1680]:  notice: Transition 10 (Complete=4, Pending=0, Fired=0, Skipped=0, Incomplete=0, Source=/var/lib/pacemaker/pengine/pe-warn-0.bz2): Complete
+Dec  1 15:45:32 centosbox02 crmd[1680]:  notice: State transition S_TRANSITION_ENGINE -> S_IDLE
+[root@centosbox02 ~]# 
+```
