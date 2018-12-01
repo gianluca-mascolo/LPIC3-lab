@@ -313,3 +313,7 @@ Login to [iface: default, target: iqn.2018-12.lab.local:clustertgt, portal: 192.
 [2:0:0:0]    disk    LIO-ORG  sdb1             4.0   /dev/sdb 
 [root@centosbox01 ~]# 
 ```
+**IMPORTANT**
+when you shutdown you vagrant machines please be sure to first shutdown nodes
+then shutdown iscsisan
+**IMPORTANT**
