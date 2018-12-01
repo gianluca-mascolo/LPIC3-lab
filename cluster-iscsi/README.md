@@ -1,12 +1,12 @@
 # cluster commands
 
-auth cluster
+## auth cluster
 ```
 [root@centosbox01 ~]# pcs cluster auth centosbox01.local.lab centosbox02.local.lab -u hacluster -p labcluster
 centosbox02.local.lab: Authorized
 centosbox01.local.lab: Authorized
 ```
-start cluster
+## start cluster
 
 ```
 [root@centosbox01 ~]# pcs cluster setup --start --name labcluster centosbox01.local.lab centosbox02.local.lab 
@@ -35,6 +35,12 @@ centosbox02.local.lab: Success
 centosbox01.local.lab: Success
 [root@centosbox01 ~]# 
 ```
+
+## fencing virtualbox
+There is a fence_vbox agent installed on each machine. fence_vbox works by connecting via ssh to the host running VMs (that is: your computer).
+I decided to use it with ssh keypairs, so I must enable ssh on my laptop and exchange keys with root user of the vms and my localuser on laptop.
+The agent then will be able to connect by ssh to my laptop and use VBoxManage to fence a machine. Note that I need to define a precise vmname in
+vagrantfile otherwise vagrant will choose a randomname for each vm.
 
 disable stonith
 ```
