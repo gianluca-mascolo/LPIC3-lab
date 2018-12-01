@@ -26,15 +26,7 @@
    - name: fix hosts file
      lineinfile:
       path: /etc/hosts
-      regexp: '^127.0.0.1.*centosbox.*'
-      create: no
-      state: absent
-     become: yes
-     become_method: sudo
-   - name: fix hosts file
-     lineinfile:
-      path: /etc/hosts
-      regexp: '^127.0.0.1.*iscsisan.*'
+      regexp: '^127.0.0.1.*(centosbox|iscsisan).*'
       create: no
       state: absent
      become: yes
@@ -121,5 +113,10 @@
       mode: 0644
       block: |
        drbd
+     become: yes
+     become_method: sudo
+   - name: disable selinux
+     selinux:
+      state: disabled
      become: yes
      become_method: sudo
