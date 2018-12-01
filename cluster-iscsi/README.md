@@ -407,4 +407,47 @@ then you can create the lvm volume as usual.
 ```
 verify that you see the same volume with lvs also on centosbox02
 
+## setup GFS2
 
+GFS2
+- it was previously called only GFS
+- it works only is a cluster is configured
+- each node keep its own journal (and will be replayed by other nodes in case of failure)
+- dlm and clvm are required for locking
+- max fs size = 100TB
+- watch out selinux settings , or disable it
+
+after creating a clvm volume, install package `gfs2-utils` on both nodes
+```
+[root@centosbox01 ~]# yum -y install gfs2-utils
+
+```
+
+**IMPORTANT**: keep time in sync with NTP!  
+
+create the gfs2 filesystem
+- `-t cluster_name:fs_name` be sure to use the same cluster name as shown by `pcs status`
+- `-j 2` number of nodes
+- `-J 16` journal size in megabytes. this is replicate on any node by the number of nodes.
+using a small value of 16MB is enough for labs
+```
+[root@centosbox01 ~]# mkfs.gfs2 -t labcluster:volgfs -j 2 -J 16 /dev/vgclvm/lvclvm
+/dev/vgclvm/lvclvm is a symbolic link to /dev/dm-0
+This will destroy any data on /dev/dm-0
+Are you sure you want to proceed? [y/n] y
+Discarding device contents (may take a while on large devices): Done
+Adding journals: Done
+Building resource groups: Done
+Creating quota file: Done
+Writing superblock and syncing: Done
+Device:                    /dev/vgclvm/lvclvm
+Block size:                4096
+Device size:               3.00 GB (785408 blocks)
+Filesystem size:           3.00 GB (785404 blocks)
+Journals:                  2
+Resource groups:           14
+Locking protocol:          "lock_dlm"
+Lock table:                "labcluster:volgfs"
+UUID:                      c41790b9-ae4c-4f2e-9518-0d62d1e8f1fe
+[root@centosbox01 ~]#
+```
