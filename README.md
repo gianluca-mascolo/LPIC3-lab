@@ -49,4 +49,20 @@ Bringing machine 'iscsisan' up with 'virtualbox' provider...
 ==> iscsisan: Checking if box 'centos/7' is up to date...
 ==> iscsisan: Clearing any previously set forwarded ports...
 ==> iscsisan: Clearing any previously set network interfaces...
+$ vagrant ssh iscsisan
+Last login: Sat Dec  1 16:03:58 2018 from 10.0.2.2
+[vagrant@iscsisan ~]$ sudo su -
+Last login: Sat Dec  1 16:04:11 UTC 2018 on pts/0
+[root@iscsisan ~]# ethtool -i eth0
+driver: virtio_net
+version: 1.0.0
+firmware-version: 
+expansion-rom-version: 
+bus-info: 0000:00:03.0
+supports-statistics: no
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: no
+[root@iscsisan ~]# 
 ```
