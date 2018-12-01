@@ -1,0 +1,125 @@
+---
+- hosts: all
+  vars:
+    packages:
+     - jq
+     - openssl
+     - pacemaker
+     - corosync
+     - haveged
+     - pcs
+     - fence-agents-all
+     - resource-agents
+     - nano
+  tasks:
+   - name: Set environment vars
+     blockinfile:
+      path: /etc/profile.d/00_env.sh
+      owner: root
+      group: root
+      create: yes
+      mode: 0755
+      block: |
+       export TERM=linux
+     become: yes
+     become_method: sudo     
+   - name: fix hosts file
+     lineinfile:
+      path: /etc/hosts
+      regexp: '^127.0.0.1.*centosbox.*'
+      create: no
+      state: absent
+     become: yes
+     become_method: sudo
+   - name: fix hosts file
+     lineinfile:
+      path: /etc/hosts
+      regexp: '^127.0.0.1.*iscsisan.*'
+      create: no
+      state: absent
+     become: yes
+     become_method: sudo
+   - name: Install Packages
+     yum:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+     become: yes
+     become_method: sudo
+   - name: Enable haveged
+     systemd:
+      name: haveged
+      enabled: yes
+      state: started
+     become: yes
+     become_method: sudo
+   - name: Enable pcsd
+     systemd:
+      name: pcsd
+      enabled: yes
+      state: started
+     become: yes
+     become_method: sudo
+   - name: Set password for hacluster
+     user:
+      name: hacluster
+      password: "$6$wOXw4xjc3RLD$8waRFfTP3Pgzxi4WDggCBybW6YAzCoKS794NE65Qp7GN4HxXugMi6vgsQYTAdSeYhfdz1bVT4VIRdQFVg3Hly/"
+     become: yes
+     become_method: sudo
+   - name: Register elrepo key
+     rpm_key:
+      state: present
+      key: https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+     become: yes
+     become_method: sudo
+   - name: Install elrepo kernel repository
+     yum:
+      name: https://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
+      state: present
+      update_cache: yes
+     become: yes
+     become_method: sudo
+   - name: Install DRBD
+     yum:
+      name: drbd90-utils
+      state: present
+      update_cache: yes
+     become: yes
+     become_method: sudo
+   - name: remove old sysconfig for kernel
+     file:
+      path: /etc/sysconfig/kernel
+      state: absent
+     become: yes
+     become_method: sudo
+   - name: update sysconfig for kernel-lt
+     blockinfile:
+      path: /etc/sysconfig/kernel
+      owner: root
+      group: root
+      create: yes
+      mode: 0644
+      block: |
+       UPDATEDEFAULT=yes
+       DEFAULTKERNEL=kernel-lt
+     become: yes
+     become_method: sudo
+   - name: Install kernel-lt
+     yum:
+      name: kernel-lt
+      state: present
+      update_cache: yes
+      enablerepo: elrepo-kernel
+     become: yes
+     become_method: sudo
+   - name: load drbd module
+     blockinfile:
+      path: /etc/modules-load.d/drbd.conf
+      owner: root
+      group: root
+      create: yes
+      mode: 0644
+      block: |
+       drbd
+     become: yes
+     become_method: sudo

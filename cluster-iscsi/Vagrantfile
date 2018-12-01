@@ -1,0 +1,43 @@
+Vagrant.configure("2") do |config|
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_host = false
+  config.hostmanager.manage_guest = true
+  config.hostmanager.ignore_private_ip = false
+  config.hostmanager.include_offline = true
+  config.vm.provision "file", source: "./ansible.repo", destination: "/tmp/ansible.repo"
+  config.vm.provision "shell", path: "./install_ansible.sh"
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "playbook.yml"
+    ansible.install = "false"
+  end
+
+  config.vm.define "cluster1" do |cluster1|
+    cluster1.vm.box = "centos/7"
+    cluster1.vm.network "private_network", ip: "192.168.50.4"
+    cluster1.vm.hostname = "centosbox01.local.lab"
+    cluster1.hostmanager.aliases = %w(centosbox01.local.lab centosbox01)
+  end
+
+  config.vm.define "cluster2" do |cluster2|
+    cluster2.vm.box = "centos/7"
+    cluster2.vm.network "private_network", ip: "192.168.50.5"
+    cluster2.vm.hostname = "centosbox02.local.lab"
+    cluster2.hostmanager.aliases = %w(centosbox02.local.lab centosbox02)
+  end
+
+  config.vm.define "iscsisan" do |iscsisan|
+    iscsisan.vm.box = "centos/7"
+    iscsisan.vm.network "private_network", ip: "192.168.50.7"
+    iscsisan.vm.hostname = "iscsisan.local.lab"
+    iscsisan.hostmanager.aliases = %w(iscsisan.local.lab iscsisan)
+    iscsisan.vm.provider "virtualbox" do |vb|
+     unless File.exist?('./iscsisan.vdi')
+      vb.customize ['createmedium', '--filename', './iscsisan.vdi', '--variant', 'Standard', '--size', 3*1024]
+     end
+     vb.customize ['storageattach', :id,  '--storagectl', 'IDE', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', './iscsisan.vdi']
+    end
+  end
+
+
+end
+
