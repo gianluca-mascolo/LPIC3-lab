@@ -344,7 +344,7 @@ install required packages on all nodes
 [root@centosbox02 ~]# yum -y install lvm2-cluster dlm
 ```
 
-on *all nodes*  
+on **all nodes**  
 In `/etc/lvm/lvm.conf`
 - set locking_type = 3 for clvm (halvm is type 1)
 - set use_lvmetad = 0
@@ -392,7 +392,7 @@ Ticket Constraints:
 ```
 
 then you can create the lvm volume as usual.  
-*note* clustered lvm does not support snapshots!  
+**note** clustered lvm does not support snapshots!  
 ```
 [root@centosbox01 ~]# pvcreate /dev/sdb
   Physical volume "/dev/sdb" successfully created.
