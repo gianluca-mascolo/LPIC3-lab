@@ -336,3 +336,75 @@ only by one node at a time (that is, you use an active/passive model). If one no
 the other take on and mount the vol as read/write.  
 cLVM on the other side let you write simultaneosly from both nodes but for that you will need
 a clustered file system like GFS or OCFS2
+
+## setup cLVM
+
+install required packages on all nodes
+```
+[root@centosbox02 ~]# yum -y install lvm2-cluster dlm
+```
+
+on *all nodes*  
+In `/etc/lvm/lvm.conf`
+- set locking_type = 3 for clvm (halvm is type 1)
+- set use_lvmetad = 0
+
+
+```
+[root@centosbox01 ~]# systemctl disable --now lvm2-lvmetad.service
+Warning: Stopping lvm2-lvmetad.service, but it can still be activated by:
+  lvm2-lvmetad.socket
+[root@centosbox01 ~]# systemctl disable --now lvm2-lvmetad.socket
+Removed symlink /etc/systemd/system/sysinit.target.wants/lvm2-lvmetad.socket.
+[root@centosbox01 ~]#
+```
+
+enable clvm
+```
+[root@centosbox01 ~]# lvmconf --enable-cluster
+```
+
+create cloned resources for dlm (controld res) and clvmd (clvm res)
+```
+[root@centosbox01 ~]# pcs resource create dlm controld op monitor interval=30s on-fail=fence clone interleave=true ordered=true
+Assumed agent name 'ocf:pacemaker:controld' (deduced from 'controld')
+[root@centosbox01 ~]# pcs resource create clvmd clvm op monitor interval=30s on-fail=fence clone interleave=true ordered=true
+Assumed agent name 'ocf:heartbeat:clvm' (deduced from 'clvm')
+[root@centosbox01 ~]#
+```
+use a constraint to let dlm start before clvm and let live them together
+```
+[root@centosbox01 ~]# pcs constraint order start dlm-clone then clvmd-clone
+Adding dlm-clone clvmd-clone (kind: Mandatory) (Options: first-action=start then-action=start)
+[root@centosbox01 ~]# pcs constraint colocation add clvmd-clone with dlm-clone
+[root@centosbox01 ~]# pcs constraint show
+Location Constraints:
+  Resource: fence_centosbox01
+    Disabled on: centosbox01.local.lab (score:-INFINITY)
+  Resource: fence_centosbox02
+    Disabled on: centosbox02.local.lab (score:-INFINITY)
+Ordering Constraints:
+  start dlm-clone then start clvmd-clone (kind:Mandatory)
+Colocation Constraints:
+  clvmd-clone with dlm-clone (score:INFINITY)
+Ticket Constraints:
+[root@centosbox01 ~]#
+```
+
+then you can create the lvm volume as usual.  
+*note* clustered lvm does not support snapshots!  
+```
+[root@centosbox01 ~]# pvcreate /dev/sdb
+  Physical volume "/dev/sdb" successfully created.
+[root@centosbox01 ~]# vgcreate vgclvm /dev/sdb
+  Clustered volume group "vgclvm" successfully created
+[root@centosbox01 ~]# lvcreate -l +100%free -n lvclvm vgclvm
+  Logical volume "lvclvm" created.
+[root@centosbox01 ~]# lvs
+  LV     VG     Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  lvclvm vgclvm -wi-a----- <3.00g
+[root@centosbox01 ~]#
+```
+verify that you see the same volume with lvs also on centosbox02
+
+
