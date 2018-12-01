@@ -429,7 +429,7 @@ create the gfs2 filesystem
 - `-t cluster_name:fs_name` be sure to use the same cluster name as shown by `pcs status`
 - `-j 2` number of nodes
 - `-J 16` journal size in megabytes. this is replicate on any node by the number of nodes.
-using a small value of 16MB is enough for labs
+using a small value of 16MB is enough for labs (default is 128MB)
 ```
 [root@centosbox01 ~]# mkfs.gfs2 -t labcluster:volgfs -j 2 -J 16 /dev/vgclvm/lvclvm
 /dev/vgclvm/lvclvm is a symbolic link to /dev/dm-0
@@ -449,5 +449,52 @@ Resource groups:           14
 Locking protocol:          "lock_dlm"
 Lock table:                "labcluster:volgfs"
 UUID:                      c41790b9-ae4c-4f2e-9518-0d62d1e8f1fe
+[root@centosbox01 ~]#
+```
+you can test mount manually, but you MUST mount with pacemaker. never never use /etc/fstab
+```
+[root@centosbox01 ~]# mount -t gfs2 /dev/mapper/vgclvm-lvclvm /cluster/
+[root@centosbox01 ~]# mount | grep cluster
+/dev/mapper/vgclvm-lvclvm on /cluster type gfs2 (rw,relatime)
+[root@centosbox01 ~]# df -h | grep cluster
+/dev/mapper/vgclvm-lvclvm  3.0G   35M  3.0G   2% /cluster
+[root@centosbox01 ~]# umount /cluster/
+```
+be sure to have a mountpoint directory (e.g. /cluster) on both nodes  
+show gfs2 filesystem settings
+```
+[root@centosbox01 ~]# tunegfs2 -l /dev/mapper/vgclvm-lvclvm
+tunegfs2 (Apr 11 2018 04:38:59)
+File system volume name: labcluster:volgfs
+File system UUID: c41790b9-ae4c-4f2e-9518-0d62d1e8f1fe
+File system magic number: 0x1161970
+Block size: 4096
+Block shift: 12
+Root inode: 8761
+Master inode: 4124
+Lock protocol: lock_dlm
+Lock table: labcluster:volgfs
+[root@centosbox01 ~]#
+```
+
+prepare the cluster to host a gfs2 volume
+```
+[root@centosbox01 ~]# pcs property set no-quorum-policy=freeze
+```
+this option instruct the cluster to do nothing if it lose quorum. the default behaviour is stop
+but in when you lose the quorum gfs2 cannot unmount and the whole cluster will be fenced
+because of the failure.
+
+finally mount your gfs2 with pacemaker
+```
+[root@centosbox01 ~]# pcs resource create clusterfs Filesystem device="/dev/vgclvm/lvclvm" directory="/cluster" fstype=gfs2 options=noatime op monitor interval=10s on-fail=fence clone interleave=true
+Assumed agent name 'ocf:heartbeat:Filesystem' (deduced from 'Filesystem')
+[root@centosbox01 ~]#
+```
+don't forget to add a contraint to let filesystem to be mounted after clvm start and keep them together
+```
+[root@centosbox01 ~]# pcs constraint order start clvmd-clone then clusterfs-clone
+Adding clvmd-clone clusterfs-clone (kind: Mandatory) (Options: first-action=start then-action=start)
+[root@centosbox01 ~]# pcs constraint colocation add clusterfs-clone with clvmd-clone
 [root@centosbox01 ~]#
 ```
