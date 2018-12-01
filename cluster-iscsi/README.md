@@ -82,6 +82,8 @@ Success: Rebooted
 (you will see centosbox01 reboot)
 
 ## enable  stonith
+
+**note**: stonith is required to have clvm and gfs2 working
 ```
 [root@centosbox01 ~]# pcs stonith create fence_centosbox01 fence_vbox identity_file="/root/.ssh/id_rsa" inet4_only=true secure=true login="gmascolo" ipaddr="192.168.50.1" port="centosbox01" pcmk_host_list="centosbox01.local.lab" pcmk_host_check=static-list pcmk_host_map="" op monitor interval=60s
 [root@centosbox01 ~]# pcs constraint location fence_centosbox01 avoids centosbox01.local.lab
