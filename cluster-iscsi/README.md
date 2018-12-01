@@ -141,3 +141,150 @@ Dec  1 15:45:32 centosbox02 crmd[1680]:  notice: Transition 10 (Complete=4, Pend
 Dec  1 15:45:32 centosbox02 crmd[1680]:  notice: State transition S_TRANSITION_ENGINE -> S_IDLE
 [root@centosbox02 ~]# 
 ```
+## create the iscsi target on iscsisan
+first create a partition on sdb (this is the custom vdi created by vagrantfile)
+```
+[root@iscsisan ~]# parted /dev/sdb
+GNU Parted 3.1
+Using /dev/sdb
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) mklabel msdos
+(parted) mkpart pri 2048s -1
+(parted) align-check opt 1
+1 aligned
+(parted) print
+Model: ATA VBOX HARDDISK (scsi)
+Disk /dev/sdb: 3221MB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags:
+
+Number  Start   End     Size    Type     File system  Flags
+ 1      1049kB  3220MB  3219MB  primary
+
+(parted) quit
+Information: You may need to update /etc/fstab.
+
+[root@iscsisan ~]#
+```
+install targetcli
+```
+[root@iscsisan ~]# yum -y install targetcli
+```
+create an iscsi target
+```
+[root@iscsisan ~]# targetcli 
+Warning: Could not load preferences file /root/.targetcli/prefs.bin.
+targetcli shell version 2.1.fb46
+Copyright 2011-2013 by Datera, Inc and others.
+For help on commands, type 'help'.
+
+/> cd backstores/
+/backstores> cd block 
+/backstores/block> create name=sdb1 dev=/dev/sdb1 
+Created block storage object sdb1 using /dev/sdb1.
+/backstores/block> ls
+o- block ................................................ [Storage Objects: 1]
+  o- sdb1 ....................... [/dev/sdb1 (0 bytes) write-thru deactivated]
+    o- alua ................................................. [ALUA Groups: 1]
+      o- default_tg_pt_gp ..................... [ALUA state: Active/optimized]
+/backstores/block> cd /iscsi 
+/iscsi> create wwn=iqn.2018-12.lab.local:clustertgt
+Created target iqn.2018-12.lab.local:clustertgt.
+Created TPG 1.
+Global pref auto_add_default_portal=true
+Created default portal listening on all IPs (0.0.0.0), port 3260.
+/iscsi> ls
+o- iscsi ........................................................ [Targets: 1]
+  o- iqn.2018-12.lab.local:clustertgt .............................. [TPGs: 1]
+    o- tpg1 ........................................... [no-gen-acls, no-auth]
+      o- acls ...................................................... [ACLs: 0]
+      o- luns ...................................................... [LUNs: 0]
+      o- portals ................................................ [Portals: 1]
+        o- 0.0.0.0:3260 ................................................. [OK]
+/iscsi> cd iqn.2018-12.lab.local:clustertgt/tpg1/
+iqn.2018-12.lab.local:clustertgt/tpg1/acls/     
+iqn.2018-12.lab.local:clustertgt/tpg1/luns/     
+iqn.2018-12.lab.local:clustertgt/tpg1/portals/  
+/iscsi> cd iqn.2018-12.lab.local:clustertgt/tpg1/portals/
+/iscsi/iqn.20.../tpg1/portals> delete 0.0.0.0 3260
+Deleted network portal 0.0.0.0:3260
+/iscsi/iqn.20.../tpg1/portals> create 192.168.50.7 3260
+Using default IP port 3260
+Created network portal 192.168.50.7:3260.
+/iscsi/iqn.20.../tpg1/portals> cd /iscsi/
+/iscsi> ls
+o- iscsi ........................................................ [Targets: 1]
+  o- iqn.2018-12.lab.local:clustertgt .............................. [TPGs: 1]
+    o- tpg1 ........................................... [no-gen-acls, no-auth]
+      o- acls ...................................................... [ACLs: 0]
+      o- luns ...................................................... [LUNs: 0]
+      o- portals ................................................ [Portals: 1]
+        o- 192.168.50.7:3260 ............................................ [OK]
+/iscsi> cd iqn.2018-12.lab.local:clustertgt/tpg1/acls 
+/iscsi/iqn.20...tgt/tpg1/acls> create wwn=iqn.2018-12.lab.local:centosbox01
+Created Node ACL for iqn.2018-12.lab.local:centosbox01
+/iscsi/iqn.20...tgt/tpg1/acls> create wwn=iqn.2018-12.lab.local:centosbox02
+Created Node ACL for iqn.2018-12.lab.local:centosbox02
+/iscsi/iqn.20...tgt/tpg1/acls> cd /
+/> ls
+o- / ................................................................... [...]
+  o- backstores ........................................................ [...]
+  | o- block ............................................ [Storage Objects: 1]
+  | | o- sdb1 ................... [/dev/sdb1 (0 bytes) write-thru deactivated]
+  | |   o- alua ............................................. [ALUA Groups: 1]
+  | |     o- default_tg_pt_gp ................. [ALUA state: Active/optimized]
+  | o- fileio ........................................... [Storage Objects: 0]
+  | o- pscsi ............................................ [Storage Objects: 0]
+  | o- ramdisk .......................................... [Storage Objects: 0]
+  o- iscsi ...................................................... [Targets: 1]
+  | o- iqn.2018-12.lab.local:clustertgt ............................ [TPGs: 1]
+  |   o- tpg1 ......................................... [no-gen-acls, no-auth]
+  |     o- acls .................................................... [ACLs: 2]
+  |     | o- iqn.2018-12.lab.local:centosbox01 .............. [Mapped LUNs: 0]
+  |     | o- iqn.2018-12.lab.local:centosbox02 .............. [Mapped LUNs: 0]
+  |     o- luns .................................................... [LUNs: 0]
+  |     o- portals .............................................. [Portals: 1]
+  |       o- 192.168.50.7:3260 .......................................... [OK]
+  o- loopback ................................................... [Targets: 0]
+/> cd iscsi/iqn.2018-12.lab.local:clustertgt/tpg1/luns 
+/iscsi/iqn.20...tgt/tpg1/luns> create /backstores/block/sdb1 
+Created LUN 0.
+Created LUN 0->0 mapping in node ACL iqn.2018-12.lab.local:centosbox02
+Created LUN 0->0 mapping in node ACL iqn.2018-12.lab.local:centosbox01
+/iscsi/iqn.20...tgt/tpg1/luns> cd /
+/> ls
+o- / ................................................................... [...]
+  o- backstores ........................................................ [...]
+  | o- block ............................................ [Storage Objects: 1]
+  | | o- sdb1 ..................... [/dev/sdb1 (0 bytes) write-thru activated]
+  | |   o- alua ............................................. [ALUA Groups: 1]
+  | |     o- default_tg_pt_gp ................. [ALUA state: Active/optimized]
+  | o- fileio ........................................... [Storage Objects: 0]
+  | o- pscsi ............................................ [Storage Objects: 0]
+  | o- ramdisk .......................................... [Storage Objects: 0]
+  o- iscsi ...................................................... [Targets: 1]
+  | o- iqn.2018-12.lab.local:clustertgt ............................ [TPGs: 1]
+  |   o- tpg1 ......................................... [no-gen-acls, no-auth]
+  |     o- acls .................................................... [ACLs: 2]
+  |     | o- iqn.2018-12.lab.local:centosbox01 .............. [Mapped LUNs: 1]
+  |     | | o- mapped_lun0 ............................ [lun0 block/sdb1 (rw)]
+  |     | o- iqn.2018-12.lab.local:centosbox02 .............. [Mapped LUNs: 1]
+  |     |   o- mapped_lun0 ............................ [lun0 block/sdb1 (rw)]
+  |     o- luns .................................................... [LUNs: 1]
+  |     | o- lun0 ................ [block/sdb1 (/dev/sdb1) (default_tg_pt_gp)]
+  |     o- portals .............................................. [Portals: 1]
+  |       o- 192.168.50.7:3260 .......................................... [OK]
+  o- loopback ................................................... [Targets: 0]
+/> exit
+Global pref auto_save_on_exit=true
+Configuration saved to /etc/target/saveconfig.json
+[root@iscsisan ~]# 
+
+```
+enable target service or configuration will be lost at reboot!!
+```
+[root@iscsisan ~]# systemctl enable --now target
+Created symlink from /etc/systemd/system/multi-user.target.wants/target.service to /usr/lib/systemd/system/target.service.
+[root@iscsisan ~]# 
+```
