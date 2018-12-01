@@ -16,6 +16,9 @@ Vagrant.configure("2") do |config|
     cluster1.vm.network "private_network", ip: "192.168.50.4"
     cluster1.vm.hostname = "centosbox01.local.lab"
     cluster1.hostmanager.aliases = %w(centosbox01.local.lab centosbox01)
+    cluster1.vm.provider "virtualbox" do |vb|
+     vb.customize ['storageattach', :id,  '--storagectl', 'IDE', '--port', 0, '--device', 1, '--type', 'dvddrive', '--medium', 'emptydrive']
+    end
   end
 
   config.vm.define "cluster2" do |cluster2|
@@ -23,6 +26,9 @@ Vagrant.configure("2") do |config|
     cluster2.vm.network "private_network", ip: "192.168.50.5"
     cluster2.vm.hostname = "centosbox02.local.lab"
     cluster2.hostmanager.aliases = %w(centosbox02.local.lab centosbox02)
+    cluster2.vm.provider "virtualbox" do |vb|
+     vb.customize ['storageattach', :id,  '--storagectl', 'IDE', '--port', 0, '--device', 1, '--type', 'dvddrive', '--medium', 'emptydrive']
+    end
   end
 
   config.vm.define "iscsisan" do |iscsisan|
@@ -35,9 +41,11 @@ Vagrant.configure("2") do |config|
       vb.customize ['createmedium', '--filename', './iscsisan.vdi', '--variant', 'Standard', '--size', 3*1024]
      end
      vb.customize ['storageattach', :id,  '--storagectl', 'IDE', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', './iscsisan.vdi']
+     vb.customize ['storageattach', :id,  '--storagectl', 'IDE', '--port', 0, '--device', 1, '--type', 'dvddrive', '--medium', 'emptydrive']
     end
   end
 
 
 end
+
 
