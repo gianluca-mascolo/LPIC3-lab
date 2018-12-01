@@ -14,6 +14,11 @@
      - gcc
      - make
      - perl
+     - autoconf
+     - autogen
+     - automake
+     - libtool
+    fenceversion: 4.3.2
   tasks:
    - name: Set environment vars
      blockinfile:
@@ -131,3 +136,57 @@
       state: disabled
      become: yes
      become_method: sudo
+   - name: Check is fence_vbox is installed
+     stat:
+      path: /usr/sbin/fence_vbox
+     register: fence_vbox
+   - name: "Download fence-agents {{ fenceversion }}" 
+     get_url:
+      url: "https://github.com/ClusterLabs/fence-agents/archive/v{{ fenceversion }}.tar.gz"
+      dest: "/tmp/v{{ fenceversion }}.tar.gz"
+      mode: 0644
+     when: fence_vbox.stat.executable is not defined
+   - name: Extract fence-agents 
+     unarchive:
+      src: "/tmp/v{{ fenceversion }}.tar.gz"
+      dest: /tmp
+     when: fence_vbox.stat.executable is not defined
+   - name: Running autogen.sh for fence-agents
+     command: "{{ item }}"
+     args:
+      chdir: "/tmp/fence-agents-{{ fenceversion }}/"
+      creates: ./configure
+     with_items:
+      - ./autogen.sh
+     when: fence_vbox.stat.executable is not defined
+   - name: Running configure for fence-agents
+     command: "{{ item }}"
+     args:
+      chdir: "/tmp/fence-agents-{{ fenceversion }}/"
+     with_items:
+      - ./configure --with-agents=vbox
+     when: fence_vbox.stat.executable is not defined
+   - name: Running make for fence-agents
+     command: "{{ item }}"
+     args:
+      chdir: "/tmp/fence-agents-{{ fenceversion }}/"
+     with_items:
+      - make
+     when: fence_vbox.stat.executable is not defined
+   - name: Running make install for fence-agents
+     command: "{{ item }}"
+     args:
+      chdir: "/tmp/fence-agents-{{ fenceversion }}/"
+     with_items:
+      - make install
+     when: fence_vbox.stat.executable is not defined
+     become: yes
+     become_method: sudo
+   - name: Clean fence-agents archive
+     file:
+      state: absent
+      path: "/tmp/v{{ fenceversion }}.tar.gz"
+   - name: Clean fence-agents source
+     file:
+      state: absent
+      path: "/tmp/fence-agents-{{ fenceversion }}/"
