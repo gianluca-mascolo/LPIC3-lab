@@ -288,3 +288,28 @@ enable target service or configuration will be lost at reboot!!
 Created symlink from /etc/systemd/system/multi-user.target.wants/target.service to /usr/lib/systemd/system/target.service.
 [root@iscsisan ~]# 
 ```
+## configure iscsi initiator on nodes
+on both nodes
+```
+[root@centosbox01 ~]# yum -y install iscsi-initiator-utils
+```
+configure the initiator name. this MUST match the one used in acls in iscsi target
+```
+[root@centosbox01 ~]# cat /etc/iscsi/initiatorname.iscsi 
+InitiatorName=iqn.1994-05.com.redhat:78d965d4f3f4
+[root@centosbox01 ~]# echo "InitiatorName=iqn.2018-12.lab.local:centosbox01" > /etc/iscsi/initiatorname.iscsi 
+[root@centosbox01 ~]# 
+```
+discover the target and login
+```
+[root@centosbox01 ~]#  iscsiadm -m discovery -t st -p 192.168.50.7:3260
+192.168.50.7:3260,1 iqn.2018-12.lab.local:clustertgt
+[root@centosbox01 ~]# iscsiadm -m node -T iqn.2018-12.lab.local:clustertgt -l
+Logging in to [iface: default, target: iqn.2018-12.lab.local:clustertgt, portal: 192.168.50.7,3260] (multiple)
+Login to [iface: default, target: iqn.2018-12.lab.local:clustertgt, portal: 192.168.50.7,3260] successful.
+[root@centosbox01 ~]# lsscsi 
+[0:0:0:0]    disk    ATA      VBOX HARDDISK    1.0   /dev/sda 
+[0:0:1:0]    cd/dvd  VBOX     CD-ROM           1.0   /dev/sr0 
+[2:0:0:0]    disk    LIO-ORG  sdb1             4.0   /dev/sdb 
+[root@centosbox01 ~]# 
+```
