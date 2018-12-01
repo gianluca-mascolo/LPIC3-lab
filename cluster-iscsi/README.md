@@ -42,6 +42,21 @@ I decided to use it with ssh keypairs, so I must enable ssh on my laptop and exc
 The agent then will be able to connect by ssh to my laptop and use VBoxManage to fence a machine. Note that I need to define a precise vmname in
 vagrantfile otherwise vagrant will choose a randomname for each vm.
 
+```
+[root@centosbox02 ~]# ssh-keygen -t rsa -b 2048
+```
+copy the generated public key to authorized_keys on my laptop. test ssh connection
+```
+[root@centosbox02 ~]# ssh -l gmascolo 192.168.50.1 hostname
+```
+test the fencing agent
+```
+[root@centosbox02 ~]# fence_vbox -a 192.168.50.1 -l gmascolo -x -k ~/.ssh/id_rsa -o reboot -n centosbox01
+Success: Rebooted
+[root@centosbox02 ~]# 
+```
+(you will see centosbox01 reboot)
+
 disable stonith
 ```
 [root@centosbox01 ~]# pcs property set stonith-enabled=false
