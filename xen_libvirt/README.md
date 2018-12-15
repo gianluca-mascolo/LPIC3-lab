@@ -43,3 +43,16 @@ qemu-system-x86_64 \
 	-netdev tap,id=qnet0,ifname=tap0,script=no,downscript=no -device virtio-net,netdev=qnet0
 ```
 please note the `-cpu host` that enable passing the vmx flags to the guest.
+
+```
+$ vagrant up --provider=libvirt
+Bringing machine 'default' up with 'libvirt' provider...
+==> default: Box 'debian/jessie64' could not be found. Attempting to find and install...
+    default: Box Provider: libvirt
+    default: Box Version: >= 0
+==> default: Loading metadata for box 'debian/jessie64'
+    default: URL: https://vagrantcloud.com/debian/jessie64
+==> default: Adding box 'debian/jessie64' (v8.11.0) for provider: libvirt
+    default: Downloading: https://vagrantcloud.com/debian/boxes/jessie64/versions/8.11.0/providers/libvirt.box
+    default: Download redirected to host: vagrantcloud-files-production.s3.amazonaws.com
+```

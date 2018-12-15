@@ -1,0 +1,19 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: "*.img"
+
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.cpus = 2
+    libvirt.cputopology :sockets => '1', :cores => '2', :threads => '1'
+    libvirt.nested = true
+    libvirt.memory=2048
+    libvirt.driver = 'kvm'
+    libvirt.storage :file, :size => '4G'
+    libvirt.cpu_mode = 'host-passthrough'
+  end
+
+  config.vm.define "xenserver" do |xenserver|
+    xenserver.vm.box = "debian/jessie64"
+    xenserver.vm.hostname = "xenserver.local.lab"
+  end
+end
