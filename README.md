@@ -9,6 +9,7 @@ this is a lab built with vagrant to experiment with centos7 cluster (pacemaker/c
 [gmascolo@gmascolo-pc vagrant]$ vagrant plugin list
 vagrant-disksize (0.1.3, global)
 vagrant-hostmanager (1.8.9, global)
+vagrant-libvirt (0.0.45, global)
 [gmascolo@gmascolo-pc vagrant]$ 
 ```
 resync playbook
