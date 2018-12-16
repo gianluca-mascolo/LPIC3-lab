@@ -1,0 +1,17 @@
+#------------------------------------------------------------------------------#
+#                   OFFICIAL DEBIAN REPOS                    
+#------------------------------------------------------------------------------#
+
+###### Debian Main Repos
+deb http://ftp.it.debian.org/debian/ oldstable main contrib non-free
+deb-src http://ftp.it.debian.org/debian/ oldstable main contrib non-free
+
+deb http://ftp.it.debian.org/debian/ oldstable-updates main contrib non-free
+deb-src http://ftp.it.debian.org/debian/ oldstable-updates main contrib non-free
+
+deb http://security.debian.org/ oldstable/updates main
+deb-src http://security.debian.org/ oldstable/updates main
+
+deb http://ftp.debian.org/debian jessie-backports main
+deb-src http://ftp.debian.org/debian jessie-backports main
+

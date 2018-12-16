@@ -9,7 +9,15 @@ Vagrant.configure("2") do |config|
     libvirt.memory=2048
     libvirt.driver = 'kvm'
     libvirt.storage :file, :size => '4G'
-    libvirt.cpu_mode = 'host-passthrough'
+    libvirt.cpu_mode = 'custom'
+    libvirt.cpu_model = 'SandyBridge'
+    libvirt.cpu_fallback = 'forbid'
+    libvirt.machine_type = 'q35'
+    libvirt.nic_model_type = 'e1000'
+    libvirt.machine_arch = 'x86_64'
+    libvirt.disk_bus = 'sata'
+    libvirt.qemuargs :value => "-device"
+    libvirt.qemuargs :value => "intel-iommu,intremap=off,caching-mode=off"
   end
 
   config.vm.define "xenserver" do |xenserver|
@@ -24,6 +32,8 @@ Vagrant.configure("2") do |config|
     xenserver.vm.box = "debian/jessie64"
     xenserver.vm.hostname = "xenserver.local.lab"
     xenserver.vm.provision "file", source: "./config/interfaces", destination: "/tmp/interfaces"
+    xenserver.vm.provision "file", source: "./config/sources.list", destination: "/tmp/sources.list"
     xenserver.vm.provision "shell", path: "./scripts/config-net-vagrant.sh"
+    xenserver.vm.provision "shell", path: "./scripts/install-xen.sh"
   end
 end
