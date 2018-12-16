@@ -1,0 +1,16 @@
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+
+auto eth1
+iface eth1 inet manual
+
+auto xenbr0
+iface xenbr0 inet static
+    bridge_ports eth1
+    address 192.168.50.2
+    network 192.168.50.0
+    netmask 255.255.255.0
+    broadcast 192.168.50.255
